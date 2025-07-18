@@ -1,0 +1,2 @@
+# libsocket
+Simple socket library. 
