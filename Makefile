@@ -1,35 +1,19 @@
-PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+# トップディレクトリのパス
+TOPDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-OBJS = libsocket.o
+.PHONY: all lib sample clean
 
-ifeq ($(BUILD_MODE),debug)
-	CFLAGS += -g -O0
-else ifeq ($(BUILD_MODE),run)
-	CFLAGS += -O2
-else ifeq ($(BUILD_MODE),profile)
-	CFLAGS += -g -pg -fprofile-arcs -ftest-coverage
-	LDFLAGS += -pg -fprofile-arcs -ftest-coverage
-	EXTRA_CLEAN += libsocket.gcda libsocket.gcno $(PROJECT_ROOT)gmon.out
-	EXTRA_CMDS = rm -rf libsocket.gcda
-else
-    $(error Build mode $(BUILD_MODE) not supported by this Makefile)
-endif
+all: lib sample
 
-all:	sample
+# ライブラリをビルド
+lib:
+	$(MAKE) -C $(TOPDIR)/lib
 
-libsocket:	$(OBJS)
-	$(CXX) $(LDFLAGS) -o $@ $^
-	$(EXTRA_CMDS)
-	
+# サンプルをビルド
 sample:
-	$(MAKE) -f ../../sample/tcp/server/make.mk
-	$(MAKE) -f ../../sample/tcp/client/make.mk
+	$(MAKE) -C $(TOPDIR)/sample
 
-%.o:	$(PROJECT_ROOT)%.cpp
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<
-
-%.o:	$(PROJECT_ROOT)%.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
-
+# クリーン
 clean:
-	rm -fr libsocket $(OBJS) $(EXTRA_CLEAN)
+	$(MAKE) -C $(TOPDIR)/lib clean
+	$(MAKE) -C $(TOPDIR)/sample clean
